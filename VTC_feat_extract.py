@@ -13,7 +13,6 @@ from scipy import signal
 import scipy
 import math
 import os
-from utils import xcorr
 import praat_formants_python as pfp
 import sklearn
 
@@ -58,43 +57,9 @@ def xcorr(x, y, normed=True, detrend=False, maxlags=10):
     c = c[Nx - 1 - maxlags:Nx + maxlags]
     return lags, c
 
-
-
-def plot_corr(np_arr,wdir,filename):
-
-    feat_type_dir = os.path.join(wdir, "corr_plot")
-    if not os.path.exists(feat_type_dir):
-        os.makedirs(feat_type_dir)
-
-    # plot the correlations for sanity
-    num_feats = 3
-    num_d = np_arr.shape[-1]
-    # print(num_d)
-
-    X_final = np.empty([num_feats*num_feats, num_d])
-    idx=0
-    y_ticks = []
-    for i in range(num_feats):
-        for j in range(num_feats):
-            # plot first 2 dmfcc
-            X_final[idx] = np_arr[i,j,:]
-
-            y_ticks.append("({},{})".format(i,j))
-
-            idx+=1
-
-    plt.clf()
-    ax = sns.heatmap(X_final)
-    ax.set(xlabel='Delay', ylabel='Channels')
-    ax.set_yticklabels(y_ticks, rotation=0)
-    fig = ax.get_figure()
-    fig.savefig(os.path.join(feat_type_dir, "{}.pdf".format(filename)))
-
-
-
-def autocorrelation(feats, wdir, filename, auto_corr, first_coef_drop, feat_type):
+def autocorrelation(feats, filename, delays):
     # Perform Autocorrelation
-    D = int(auto_corr) # 100
+    D = int(delays)
 
     num_channels = feats.shape[0]
     corr_arr = np.empty([num_channels,num_channels,D])
@@ -119,21 +84,16 @@ def autocorrelation(feats, wdir, filename, auto_corr, first_coef_drop, feat_type
 
 
 
-
-    ## Sanity check (print corr)
-    plot_corr(np_arr=corr_arr_D, wdir=wdir, filename=filename)
-
-
     return corr_arr_D
 
 def main():
     # Define what features to extract
     parser = argparse.ArgumentParser()
-    parser.add_argument('feat_type', help='feature type: [formant, mfcc, dmfcc]')
-    parser.add_argument('audio_file', help='path to audio file (wav)')
-    parser.add_argument('feat_dir', help='dir to write features to (output features)')
-    parser.add_argument('auto_corr', help='auto_corr nums 81 used in our work')
-    parser.add_argument('raw_wdir', help='wdir raw')
+    parser.add_argument('-feat_type', help='feature type: [formant, mfcc, dmfcc, dmfcc]')
+    parser.add_argument('-audio_file', help='path to audio file (wav)')
+    parser.add_argument('-delays', help='time delays for correlation 81 used in our work')
+    parser.add_argument('-vtc_dir', help='dir to write features to (output features)')
+    parser.add_argument('-raw_dir', help='dir to write raw wavforms')
     args = parser.parse_args()
 
 
@@ -146,36 +106,23 @@ def main():
     if args.feat_type == 'mfcc':
         y, sr = librosa.load(args.audio_file)
         feats = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=16, hop_length=int(0.010*sr), n_fft=int(0.025*sr))
-
-        # 0th coefficient is constant
-        if first_coef_drop:
-            feats = feats[1:,:]
-        else:
-            # repalce with energy
-            feats[0] = librosa.feature.rms(y=y, hop_length=int(0.010*sr))
-
         # cmvn normalize
         feats = feats.astype(float)
         feats = sklearn.preprocessing.scale(feats, axis=1)
+        # 0th coefficient is constant
+        feats = feats[1:,:]
 
     elif args.feat_type == 'dmfcc':
         y, sr = librosa.load(args.audio_file)
         mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=16, hop_length=int(0.010*sr), n_fft=int(0.025*sr))
-
+        
         # cmvn normalize
         mfcc = mfcc.astype(float)
         mfcc = sklearn.preprocessing.scale(mfcc, axis=1)
+        mfcc = mfcc[1:,:]
 
         # 0th coefficient is constant
-        if first_coef_drop:
-            mfcc = mfcc[1:,:]
-        else:
-            # repalce with energy
-            mfcc[0] = librosa.feature.rms(y=y,hop_length=int(0.010*sr))
-
         feats = librosa.feature.delta(mfcc, order=1)
-
-
 
     elif args.feat_type == 'ddmfcc':
         y, sr = librosa.load(args.audio_file)
@@ -184,13 +131,9 @@ def main():
         # cmvn normalize
         mfcc = mfcc.astype(float)
         mfcc = sklearn.preprocessing.scale(mfcc, axis=1)
-
         # 0th coefficient is constant
-        if first_coef_drop:
-            mfcc = mfcc[1:,:]
-        else:
-            # replace with energy
-            mfcc[0] = librosa.feature.rms(y=y, hop_length=int(0.010*sr))
+        mfcc = mfcc[1:,:]
+
         feats = librosa.feature.delta(mfcc, order=2)
 
     elif args.feat_type == 'formant':
@@ -204,52 +147,40 @@ def main():
         feats = sklearn.preprocessing.scale(feats, axis=1)
 
 
+    # Create directories for 
+    FVTC_dir = os.path.join(args.vtc_dir,"FVTC", args.feat_type)
+    EVTC_dir = os.path.join(args.vtc_dir, "EVTC", args.feat_type)
+    raw_feat_dir = os.path.join(args.raw_dir, args.feat_type)
 
-    if first_coef_drop and cmvn_bool:
-        feat_type_dir = os.path.join(args.feat_dir,"cmvn_drop_first_coef", args.feat_type)
-        raw_feat_type_dir = os.path.join(args.raw_wdir, "cmvn_drop_first_coef", args.feat_type)
-    elif first_coef_drop and not cmvn_bool:
-        feat_type_dir = os.path.join(args.feat_dir,"drop_first_coef", args.feat_type)
-        raw_feat_type_dir = os.path.join(args.raw_wdir, "drop_first_coef", args.feat_type)
-    elif not first_coef_drop and cmvn_bool:
-        feat_type_dir = os.path.join(args.feat_dir,"cmvn_rmse_first_coef", args.feat_type)
-        raw_feat_type_dir = os.path.join(args.raw_wdir, "cmvn_rmse_first_coef", args.feat_type)
-    else:
-        feat_type_dir = os.path.join(args.feat_dir,"rmse_first_coef", args.feat_type)
-        raw_feat_type_dir = os.path.join(args.raw_wdir, "rmse_first_coef", args.feat_type)
-
-
-
-    if not os.path.exists(feat_type_dir):
-        os.makedirs(feat_type_dir)
-
-    if not os.path.exists(raw_feat_type_dir):
-        os.makedirs(raw_feat_type_dir)
+    # Make directories
+    if not os.path.exists(FVTC_dir):
+        os.makedirs(FVTC_dir)
+    if not os.path.exists(EVTC_dir):
+        os.makedirs(EVTC_dir)
+    if not os.path.exists(raw_feat_dir):
+        os.makedirs(raw_feat_dir)
 
     # get uttname
     filename=args.audio_file.split("/")[-1].split(".")[0]
 
     # Compute correlations 
-    corr_data = autocorrelation(feats=feats, wdir=feat_type_dir, filename=filename, auto_corr=args.auto_corr, first_coef_drop=first_coef_drop, feat_type=args.feat_type)
+    FVTC_data = autocorrelation(feats=feats, filename=filename, delays=args.delays)
+    # Save FVTC
+    FVTC_save_file = os.path.join(FVTC_dir, "{}.npy".format(filename))
+    np.save(FVTC_save_file, FVTC_data)
 
-    # add length in seconds to filename (for SS files where we need to filter out some data by length)
-    seconds = int(sox.file_info.duration(args.audio_file))
 
-    # Save correlation features to 'feats dir'
-    save_file = os.path.join(feat_type_dir, "{}_{}.npy".format(filename,seconds))
-    np.save(save_file, corr_data)
+    # Compute EVTC and save EVTC
+    FVTC_data = np.swapaxes(FVTC_data, 0,2)
+    EVTC_data, _ = np.linalg.eigh(FVTC_data)
+    EVTC_data = np.swapaxes(EVTC_data, 0,1)
+    EVTC_save_file = os.path.join(EVTC_dir, "{}.npy".format(filename))
+    np.save(EVTC_save_file, EVTC_data)
+
 
     # Save raw features to 'raw_feat_type_dir'
-    save_raw_file = os.path.join(raw_feat_type_dir, "{}_{}.npy".format(filename,seconds))
+    save_raw_file = os.path.join(raw_feat_dir, "{}.npy".format(filename))
     np.save(save_raw_file, feats)
-
-    # # print mfcc
-    plt.clf()
-    sns.palplot(sns.diverging_palette(240, 10, n=9))
-    ax = sns.heatmap(feats[:,:300], cmap=sns.color_palette("coolwarm", as_cmap=True))
-    ax.invert_yaxis()
-    fig = ax.get_figure()
-    fig.savefig(os.path.join(feat_type_dir, "{}_3s.png".format(filename)))
 
 
 
