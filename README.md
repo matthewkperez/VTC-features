@@ -13,15 +13,15 @@ Argument Parser Descriptions:
 -vtc_dir = Directory to write VTC (FVTC/EVTC) features to  
 -raw_dir = Directory to write raw acoustic features to  
 
-If you found this helpful please consider citing and checking out the following literature:
-Perez, Matthew, et al. "Articulatory Coordination for Speech Motor Tracking in Huntington Disease}}." Proc. Interspeech 2021 (2021): 1409-1413.
+If you found this helpful please consider citing and checking out the following literature:  
+[1] Perez, Matthew, et al. "Articulatory Coordination for Speech Motor Tracking in Huntington Disease}}." Proc. Interspeech 2021 (2021): 1409-1413.
 
-Talkar, Tanya, et al. "Acoustic Indicators of Speech Motor Coordination in Adults With and Without Traumatic Brain Injury}}." Proc. Interspeech 2021 (2021): 21-25.
+[2] Huang, Zhaocheng, Julien Epps, and Dale Joachim. "Exploiting vocal tract coordination using dilated CNNs for depression detection in naturalistic environments." ICASSP 2020-2020 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP). IEEE, 2020.
 
-Huang, Zhaocheng, Julien Epps, and Dale Joachim. "Exploiting vocal tract coordination using dilated CNNs for depression detection in naturalistic environments." ICASSP 2020-2020 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP). IEEE, 2020.
+[3] Williamson, James R., et al. "Vocal biomarkers of depression based on motor incoordination." Proceedings of the 3rd ACM international workshop on Audio/visual emotion challenge. 2013.
 
-Williamson, James R., et al. "Vocal biomarkers of depression based on motor incoordination." Proceedings of the 3rd ACM international workshop on Audio/visual emotion challenge. 2013.
+[4] Williamson, James R., et al. "Detecting depression using vocal, facial and semantic communication cues." Proceedings of the 6th International Workshop on Audio/Visual Emotion Challenge. 2016.
 
-Williamson, James R., et al. "Detecting depression using vocal, facial and semantic communication cues." Proceedings of the 6th International Workshop on Audio/Visual Emotion Challenge. 2016.
+[5] Talkar, Tanya, et al. "Acoustic Indicators of Speech Motor Coordination in Adults With and Without Traumatic Brain Injury}}." Proc. Interspeech 2021 (2021): 21-25.
 
-Williamson, James R., et al. "Tracking depression severity from audio and video based on speech articulatory coordination." Computer Speech & Language 55 (2019): 40-56.
+[6] Williamson, James R., et al. "Tracking depression severity from audio and video based on speech articulatory coordination." Computer Speech & Language 55 (2019): 40-56.
