@@ -14,6 +14,7 @@ Argument Parser Descriptions:
 -raw_dir = Directory to write raw acoustic features to  
 
 If you found this helpful please consider citing and checking out the following literature:  
+
 [1] Perez, Matthew, et al. "Articulatory Coordination for Speech Motor Tracking in Huntington Disease}}." Proc. Interspeech 2021 (2021): 1409-1413.
 
 [2] Huang, Zhaocheng, Julien Epps, and Dale Joachim. "Exploiting vocal tract coordination using dilated CNNs for depression detection in naturalistic environments." ICASSP 2020-2020 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP). IEEE, 2020.
